@@ -35,6 +35,7 @@ import 'package:myapp/pages/Admin/admin_partners_page.dart';
 import 'package:myapp/pages/Admin/admin_partner_registration_page.dart';
 import 'package:myapp/pages/Admin/admin_partner_validation_page.dart';
 import 'package:myapp/pages/Admin/admin_clients_page.dart';
+import 'package:myapp/pages/Admin/partner_web_registration_page.dart';
 
 import 'package:myapp/widgets/bottom_nav_bar.dart';
 
@@ -267,6 +268,14 @@ final GoRouter router = GoRouter(
       path: '/admin/partners/new',
       builder: (BuildContext context, GoRouterState state) {
         return const PartnerRegistrationPage();
+      },
+    ),
+
+    // Admin Partner Registration (Web Style - TGTG)
+    GoRoute(
+      path: '/admin/register-web',
+      builder: (BuildContext context, GoRouterState state) {
+        return const PartnerWebRegistrationPage();
       },
     ),
 

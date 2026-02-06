@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/constants.dart';
+import 'package:myapp/pages/Admin/admin_layout.dart';
 
-/// Dashboard Admin - Clone TGTG Style
+/// Dashboard Admin - Web Style TGTG
 class AdminDashboardPage extends StatelessWidget {
   const AdminDashboardPage({super.key});
 
@@ -17,34 +18,40 @@ class AdminDashboardPage extends StatelessWidget {
       'revenue': 45890.50,
     };
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: AppColors.blueBic,
-        elevation: 0,
-        title: Text(
-          'Tableau de Bord',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(context),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+    final recentActivity = [
+      {
+        'type': 'order',
+        'message': 'Nouvelle commande #1247',
+        'time': 'Il y a 5 min',
+        'icon': Icons.shopping_bag,
+      },
+      {
+        'type': 'partner',
+        'message': 'Nouveau partenaire: Ocean Fresh',
+        'time': 'Il y a 15 min',
+        'icon': Icons.store,
+      },
+      {
+        'type': 'user',
+        'message': 'Nouvel utilisateur inscrit',
+        'time': 'Il y a 32 min',
+        'icon': Icons.person_add,
+      },
+    ];
+
+    return TGTGAdminLayout(
+      currentRoute: '/admin/dashboard',
+      title: 'Tableau de Bord',
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome message
+            // Welcome
             Text(
               'Bienvenue, Administrateur',
               style: GoogleFonts.poppins(
-                fontSize: 24,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
@@ -55,119 +62,147 @@ class AdminDashboardPage extends StatelessWidget {
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
+
             // Stats Grid
             Row(
               children: [
                 Expanded(
                   child: _buildStatCard(
-                    context: context,
-                    title: 'Commandes',
-                    value: stats['totalOrders'].toString(),
-                    icon: Icons.shopping_bag,
-                    color: AppColors.blueBic,
-                    onTap: () => context.go('/admin/orders'),
+                    context,
+                    'Commandes',
+                    stats['totalOrders'].toString(),
+                    Icons.shopping_bag,
+                    AppColors.blueBic,
+                    '/admin/orders',
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: _buildStatCard(
-                    context: context,
-                    title: 'Partenaires',
-                    value: stats['activePartners'].toString(),
-                    icon: Icons.store,
-                    color: Colors.green,
-                    onTap: () => context.go('/admin/partners'),
+                    context,
+                    'Partenaires',
+                    stats['activePartners'].toString(),
+                    Icons.store,
+                    Colors.green,
+                    '/admin/partners',
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
+                const SizedBox(width: 16),
                 Expanded(
                   child: _buildStatCard(
-                    context: context,
-                    title: 'Utilisateurs',
-                    value: stats['totalUsers'].toString(),
-                    icon: Icons.people,
-                    color: Colors.orange,
-                    onTap: () => context.go('/admin/clients'),
+                    context,
+                    'Utilisateurs',
+                    stats['totalUsers'].toString(),
+                    Icons.people,
+                    Colors.orange,
+                    '/admin/clients',
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
                   child: _buildStatCard(
-                    context: context,
-                    title: 'Revenus',
-                    value: '${(stats['revenue'] as double).toStringAsFixed(0)}€',
-                    icon: Icons.euro,
-                    color: Colors.purple,
-                    onTap: () => context.go('/admin/revenue'),
+                    context,
+                    'Revenus',
+                    '${stats['revenue']}€',
+                    Icons.attach_money,
+                    Colors.purple,
+                    '/admin/analytics',
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            // Quick Actions
-            Text(
-              'Actions rapides',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
+
+            // Main content row
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Recent Activity
                 Expanded(
-                  child: _buildQuickAction(
-                    context: context,
-                    icon: Icons.person_add,
-                    label: 'Nouveau partenaire',
-                    onTap: () => context.go('/admin/partners/new'),
+                  flex: 2,
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Activité récente',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text('Voir tout'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          ...recentActivity.map(
+                            (activity) => _buildActivityItem(activity),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 24),
+                // Quick Actions
                 Expanded(
-                  child: _buildQuickAction(
-                    context: context,
-                    icon: Icons.inventory_2,
-                    label: 'Ajouter produit',
-                    onTap: () => context.go('/admin/products/new'),
+                  flex: 1,
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Actions rapides',
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildQuickAction(
+                            context,
+                            Icons.add_business,
+                            'Ajouter un partenaire',
+                            '/admin/register-web',
+                          ),
+                          _buildQuickAction(
+                            context,
+                            Icons.analytics,
+                            'Voir les statistiques',
+                            '/admin/analytics',
+                          ),
+                          _buildQuickAction(
+                            context,
+                            Icons.settings,
+                            'Paramètres',
+                            '/admin/settings',
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 24),
-            // Recent Activity
-            Text(
-              'Activité récente',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildRecentActivityTile(
-              icon: Icons.storefront,
-              title: 'Nouveau partenaire',
-              subtitle: 'Poissonnerie du Port - En attente de validation',
-              time: 'Il y a 5 min',
-              color: Colors.orange,
-            ),
-            _buildRecentActivityTile(
-              icon: Icons.shopping_bag,
-              title: 'Nouvelle commande',
-              subtitle: 'CMD-1247 - 12.50€',
-              time: 'Il y a 12 min',
-              color: AppColors.blueBic,
-            ),
-            _buildRecentActivityTile(
-              icon: Icons.person,
-              title: 'Nouvel utilisateur',
-              subtitle: 'Ibrahima S. - S\'est inscrit',
-              time: 'Il y a 25 min',
-              color: Colors.green,
             ),
           ],
         ),
@@ -175,118 +210,81 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard({
-    required BuildContext context,
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    String route,
+  ) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.blueBic,
+      onTap: () => context.go(route),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.grey[200]!),
         ),
-        child: Column(
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(icon, color: color, size: 24),
+                  ),
+                  const Icon(Icons.arrow_forward, color: Colors.grey, size: 20),
+                ],
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildRecentActivityTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String time,
-    required Color color,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _buildActivityItem(Map<String, dynamic> activity) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.blueBic.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(
+              activity['icon'] as IconData,
+              color: AppColors.blueBic,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -294,138 +292,51 @@ class AdminDashboardPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  activity['message'] as String,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  subtitle,
+                  activity['time'] as String,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Colors.grey[500],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          Text(
-            time,
-            style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[500]),
-          ),
         ],
       ),
     );
   }
 
-  Drawer _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: AppColors.blueBic),
-            accountName: Text(
-              'Administrateur',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+  Widget _buildQuickAction(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String route,
+  ) {
+    return InkWell(
+      onTap: () => context.go(route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.blueBic),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            accountEmail: Text('admin@dailycatch.com'),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.admin_panel_settings, color: AppColors.blueBic),
-            ),
-          ),
-          _buildDrawerSection('Gestion Utilisateurs'),
-          _buildDrawerItem(
-            Icons.people,
-            'Clients',
-            () => context.go('/admin/clients'),
-          ),
-          _buildDrawerItem(
-            Icons.store,
-            'Partenaires',
-            () => context.go('/admin/partners'),
-          ),
-          _buildDrawerItem(
-            Icons.verified_user,
-            'Validation partenaires',
-            () => context.go('/admin/partners/pending'),
-          ),
-          const Divider(),
-          _buildDrawerSection('Gestion Produits'),
-          _buildDrawerItem(
-            Icons.inventory_2,
-            'Produits',
-            () => context.go('/admin/products'),
-          ),
-          _buildDrawerItem(
-            Icons.add_box,
-            'Ajouter produit',
-            () => context.go('/admin/products/new'),
-          ),
-          const Divider(),
-          _buildDrawerSection('Commandes'),
-          _buildDrawerItem(
-            Icons.shopping_bag,
-            'Toutes les commandes',
-            () => context.go('/admin/orders'),
-          ),
-          _buildDrawerItem(
-            Icons.local_shipping,
-            'Suivi livraisons',
-            () => context.go('/admin/deliveries'),
-          ),
-          const Divider(),
-          _buildDrawerSection('Paiements'),
-          _buildDrawerItem(
-            Icons.euro,
-            'Revenus',
-            () => context.go('/admin/revenue'),
-          ),
-          _buildDrawerItem(
-            Icons.payments,
-            'Paiements partenaires',
-            () => context.go('/admin/partner-payments'),
-          ),
-          const Divider(),
-          _buildDrawerSection('Paramètres'),
-          _buildDrawerItem(
-            Icons.settings,
-            'Paramètres',
-            () => context.go('/admin/settings'),
-          ),
-          _buildDrawerItem(
-            Icons.logout,
-            'Déconnexion',
-            () => context.go('/login'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerSection(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: GoogleFonts.poppins(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey[500],
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.blueBic),
-      title: Text(title, style: GoogleFonts.poppins()),
-      onTap: onTap,
     );
   }
 }

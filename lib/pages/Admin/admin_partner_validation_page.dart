@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/constants.dart';
+import 'package:myapp/pages/Admin/admin_layout.dart';
 
-/// Partner Validation Page - Clone TGTG Style
-/// Page pour valider/refuser les demandes de partenariat en attente
+/// Partner Validation Page - Web Style TGTG
 class PartnerValidationPage extends StatefulWidget {
   const PartnerValidationPage({super.key});
 
@@ -99,59 +99,83 @@ class _PartnerValidationPageState extends State<PartnerValidationPage> {
     );
   }
 
+  String _getTimeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date);
+    if (diff.inDays > 0) {
+      return '${diff.inDays} jour${diff.inDays > 1 ? 's' : ''}';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours} heure${diff.inHours > 1 ? 's' : ''}';
+    } else {
+      return '${diff.inMinutes} minute${diff.inMinutes > 1 ? 's' : ''}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Validation partenaires',
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        actions: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${_pendingPartners.length} en attente',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+    return TGTGAdminLayout(
+      currentRoute: '/admin/partners/pending',
+      title: 'Validation des partenaires',
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Demandes en attente',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${_pendingPartners.length} demande${_pendingPartners.length > 1 ? 's' : ''} à traiter',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${_pendingPartners.length} en attente',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // Partners List
+            _pendingPartners.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _pendingPartners.length,
+                    itemBuilder: (context, index) {
+                      final partner = _pendingPartners[index];
+                      return _buildPartnerCard(context, partner);
+                    },
+                  ),
+          ],
+        ),
       ),
-      drawer: _buildDrawer(context),
-      body: _pendingPartners.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _pendingPartners.length,
-              itemBuilder: (context, index) {
-                final partner = _pendingPartners[index];
-                return _buildPartnerCard(context, partner);
-              },
-            ),
     );
   }
 
@@ -191,233 +215,194 @@ class _PartnerValidationPageState extends State<PartnerValidationPage> {
   }
 
   Widget _buildPartnerCard(BuildContext context, Map<String, dynamic> partner) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.3),
-        ),
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.orange.withValues(alpha: 0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.blueBic.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Text(
-                    partner['name'][0],
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.blueBic,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.blueBic.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      partner['name'][0],
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blueBic,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      partner['name'] as String,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            partner['name'] as String,
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Il y a ${_getTimeAgo(partner['appliedDate'] as DateTime)}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    Text(
-                      partner['category'] as String,
+                      Text(
+                        partner['category'] as String,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+
+            // Info Grid
+            Row(
+              children: [
+                Expanded(child: _buildInfoItem(Icons.person, 'Responsable', partner['owner'] as String)),
+                Expanded(child: _buildInfoItem(Icons.email, 'Email', partner['email'] as String)),
+                Expanded(child: _buildInfoItem(Icons.phone, 'Téléphone', partner['phone'] as String)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildInfoItem(Icons.location_on, 'Adresse', partner['address'] as String)),
+                Expanded(child: _buildInfoItem(Icons.access_time, 'Horaires', partner['openingHours'] as String)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Description
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.description, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      partner['description'] as String,
                       style: GoogleFonts.poppins(
                         fontSize: 13,
-                        color: Colors.grey[600],
+                        color: Colors.grey[700],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 14, color: Colors.orange),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Il y a ${_getTimeAgo(partner['appliedDate'] as DateTime)}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 12),
-          // Info
-          _buildInfoRow(Icons.person, 'Responsable:', partner['owner'] as String),
-          _buildInfoRow(Icons.email, 'Email:', partner['email'] as String),
-          _buildInfoRow(Icons.phone, 'Téléphone:', partner['phone'] as String),
-          _buildInfoRow(Icons.location_on, 'Adresse:', partner['address'] as String),
-          _buildInfoRow(Icons.access_time, 'Horaires:', partner['openingHours'] as String),
-          const SizedBox(height: 12),
-          // Description
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              partner['description'] as String,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: Colors.grey[700],
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _rejectPartner(partner['id'] as String),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: Colors.red),
-                    foregroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            const SizedBox(height: 20),
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _rejectPartner(partner['id'] as String),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: Colors.red),
+                      foregroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    icon: const Icon(Icons.close),
+                    label: Text('Rejeter', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                   ),
-                  icon: const Icon(Icons.close),
-                  label: Text('Rejeter', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _approvePartner(partner['id'] as String),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _approvePartner(partner['id'] as String),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    icon: const Icon(Icons.check, color: Colors.white),
+                    label: Text('Approuver', style: GoogleFonts.poppins(fontWeight: FontWeight.w600, color: Colors.white)),
                   ),
-                  icon: const Icon(Icons.check),
-                  label: Text('Approuver', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoItem(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(right: 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 16, color: AppColors.blueBic),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                color: Colors.grey[600],
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.grey[600],
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              Text(
+                value,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getTimeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays > 0) {
-      return '${diff.inDays} jour${diff.inDays > 1 ? 's' : ''}';
-    } else if (diff.inHours > 0) {
-      return '${diff.inHours} heure${diff.inHours > 1 ? 's' : ''}';
-    } else {
-      return '${diff.inMinutes} minute${diff.inMinutes > 1 ? 's' : ''}';
-    }
-  }
-
-  Drawer _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: AppColors.blueBic),
-            accountName: Text('Administrateur', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-            accountEmail: Text('admin@dailycatch.com'),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.admin_panel_settings, color: AppColors.blueBic),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.dashboard, color: AppColors.blueBic),
-            title: Text('Dashboard', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/admin/dashboard'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.store, color: AppColors.blueBic),
-            title: Text('Partenaires', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/admin/partners'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.verified_user, color: Colors.orange),
-            title: Text('Validation', style: GoogleFonts.poppins()),
-            onTap: () => context.pop(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people, color: AppColors.blueBic),
-            title: Text('Clients', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/admin/clients'),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text('Déconnexion', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/login'),
+            ],
           ),
         ],
       ),

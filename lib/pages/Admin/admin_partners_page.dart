@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:myapp/constants.dart';
+import 'package:myapp/pages/Admin/admin_layout.dart';
 
-/// Partners Management Page - Clone TGTG Style
-/// Gestion des partenaires/commerces qui vendent leurs produits
+/// Partners Management Page - Web Style TGTG
 class AdminPartnersPage extends StatefulWidget {
   const AdminPartnersPage({super.key});
 
@@ -13,7 +13,7 @@ class AdminPartnersPage extends StatefulWidget {
 }
 
 class _AdminPartnersPageState extends State<AdminPartnersPage> {
-  int _selectedTab = 0; // 0 = Tous, 1 = Actifs, 2 = En attente, 3 = Inactifs
+  int _selectedTab = 0;
   final TextEditingController _searchController = TextEditingController();
 
   // Mock data for partners
@@ -83,40 +83,36 @@ class _AdminPartnersPageState extends State<AdminPartnersPage> {
       'phone': '+221 77 567 89 01',
       'address': '55 Rue des Coquillages',
       'status': 'inactive',
-      'rating': 3.9,
-      'ordersCount': 78,
+      'rating': 4.0,
+      'ordersCount': 89,
       'revenue': 4200.75,
       'joinedDate': DateTime.now().subtract(const Duration(days: 90)),
     },
   ];
 
   List<Map<String, dynamic>> get _filteredPartners {
-    var filtered = _partners;
+    List<Map<String, dynamic>> result = [..._partners];
 
     // Filter by tab
     if (_selectedTab == 1) {
-      filtered = filtered.where((p) => p['status'] == 'active').toList();
+      result = result.where((p) => p['status'] == 'active').toList();
     } else if (_selectedTab == 2) {
-      filtered = filtered.where((p) => p['status'] == 'pending').toList();
+      result = result.where((p) => p['status'] == 'pending').toList();
     } else if (_selectedTab == 3) {
-      filtered = filtered.where((p) => p['status'] == 'inactive').toList();
+      result = result.where((p) => p['status'] == 'inactive').toList();
     }
 
     // Filter by search
     if (_searchController.text.isNotEmpty) {
       final query = _searchController.text.toLowerCase();
-      filtered =
-          filtered
-              .where(
-                (p) =>
-                    p['name'].toString().toLowerCase().contains(query) ||
-                    p['owner'].toString().toLowerCase().contains(query) ||
-                    p['category'].toString().toLowerCase().contains(query),
-              )
-              .toList();
+      result = result.where((p) {
+        return (p['name'] as String).toLowerCase().contains(query) ||
+               (p['owner'] as String).toLowerCase().contains(query) ||
+               (p['email'] as String).toLowerCase().contains(query);
+      }).toList();
     }
 
-    return filtered;
+    return result;
   }
 
   Color _getStatusColor(String status) {
@@ -126,13 +122,13 @@ class _AdminPartnersPageState extends State<AdminPartnersPage> {
       case 'pending':
         return Colors.orange;
       case 'inactive':
-        return Colors.red;
+        return Colors.grey;
       default:
         return Colors.grey;
     }
   }
 
-  String _getStatusText(String status) {
+  String _getStatusLabel(String status) {
     switch (status) {
       case 'active':
         return 'Actif';
@@ -146,315 +142,245 @@ class _AdminPartnersPageState extends State<AdminPartnersPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'Partenaires',
-          style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.black),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.blueBic),
-            onPressed: () => context.go('/admin/partners/new'),
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(context),
-      body: Column(
-        children: [
-          // Search bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Rechercher un partenaire...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              onChanged: (value) => setState(() {}),
-            ),
-          ),
-          // Status tabs
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildTab('Tous', 0),
-                  _buildTab('Actifs', 1),
-                  _buildTab('En attente', 2),
-                  _buildTab('Inactifs', 3),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Partners list
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredPartners.length,
-              itemBuilder: (context, index) {
-                final partner = _filteredPartners[index];
-                return _buildPartnerCard(context, partner);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(String label, int index) {
-    final isSelected = _selectedTab == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedTab = index),
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.blueBic : Colors.grey[200],
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPartnerCard(BuildContext context, Map<String, dynamic> partner) {
-    return GestureDetector(
-      onTap: () => context.go('/admin/partners/${partner['id']}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color:
-                partner['status'] == 'pending'
-                    ? Colors.orange.withValues(alpha: 0.3)
-                    : Colors.transparent,
-          ),
-        ),
+    return TGTGAdminLayout(
+      currentRoute: '/admin/partners',
+      title: 'Partenaires',
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Avatar
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.blueBic.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      partner['name'][0],
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gestion des partenaires',
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.blueBic,
                       ),
                     ),
-                  ),
+                    Text(
+                      '${_filteredPartners.length} partenaires',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              partner['name'] as String,
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getStatusColor(
-                                partner['status'] as String,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              _getStatusText(partner['status'] as String),
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _getStatusColor(
-                                  partner['status'] as String,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        partner['category'] as String,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.person,
-                            size: 14,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            partner['owner'] as String,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                ElevatedButton.icon(
+                  onPressed: () => context.go('/admin/register-web'),
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: Text(
+                    'Ajouter',
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blueBic,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
                 ),
               ],
             ),
-            if (partner['status'] == 'active') ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildMetric(
-                    Icons.star,
-                    '${partner['rating']}',
-                    Colors.amber,
-                  ),
-                  const SizedBox(width: 24),
-                  _buildMetric(
-                    Icons.shopping_bag,
-                    '${partner['ordersCount']}',
-                    AppColors.blueBic,
-                  ),
-                  const SizedBox(width: 24),
-                  _buildMetric(
-                    Icons.euro,
-                    '${(partner['revenue'] as double).toStringAsFixed(0)}€',
-                    Colors.green,
-                  ),
-                ],
+            const SizedBox(height: 24),
+
+            // Filters
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey[200]!),
               ),
-            ],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Search
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Rechercher un partenaire...',
+                            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onChanged: (value) => setState(() {}),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Status tabs
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildTabButton('Tous', 0),
+                          _buildTabButton('Actifs', 1),
+                          _buildTabButton('En attente', 2),
+                          _buildTabButton('Inactifs', 3),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Partners Table
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              child: SingleChildScrollView(
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('Partenaire')),
+                    DataColumn(label: Text('Catégorie')),
+                    DataColumn(label: Text('Statut')),
+                    DataColumn(label: Text('Note')),
+                    DataColumn(label: Text('Commandes')),
+                    DataColumn(label: Text('Revenus')),
+                    DataColumn(label: Text('')),
+                  ],
+                  rows: _filteredPartners.map((partner) {
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.blueBic.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.store,
+                                  color: AppColors.blueBic,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    partner['name'] as String,
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    partner['email'] as String,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            partner['category'] as String,
+                            style: GoogleFonts.poppins(),
+                          ),
+                        ),
+                        DataCell(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(partner['status'] as String).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _getStatusLabel(partner['status'] as String),
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: _getStatusColor(partner['status'] as String),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Color(0xFFFFB800), size: 16),
+                              const SizedBox(width: 4),
+                              Text(partner['rating'].toString()),
+                            ],
+                          ),
+                        ),
+                        DataCell(
+                          Text((partner['ordersCount'] as int).toString()),
+                        ),
+                        DataCell(
+                          Text(
+                            '${partner['revenue']}€',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          IconButton(
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: () {},
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMetric(IconData icon, String value, Color color) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
+  Widget _buildTabButton(String label, int index) {
+    final isSelected = _selectedTab == index;
+    return MaterialButton(
+      onPressed: () => setState(() => _selectedTab = index),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 13,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          color: isSelected ? AppColors.blueBic : Colors.grey[700],
         ),
-      ],
-    );
-  }
-
-  Drawer _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: AppColors.blueBic),
-            accountName: Text(
-              'Administrateur',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-            ),
-            accountEmail: Text('admin@dailycatch.com'),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.admin_panel_settings, color: AppColors.blueBic),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.dashboard, color: AppColors.blueBic),
-            title: Text('Dashboard', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/admin/dashboard'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.store, color: AppColors.blueBic),
-            title: Text('Partenaires', style: GoogleFonts.poppins()),
-            onTap: () => context.pop(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people, color: AppColors.blueBic),
-            title: Text('Clients', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/admin/clients'),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text('Déconnexion', style: GoogleFonts.poppins()),
-            onTap: () => context.go('/login'),
-          ),
-        ],
       ),
     );
   }
