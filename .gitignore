@@ -103,3 +103,6 @@ Run
 
 # Misc
 *.localized
+
+*.apk
+android/app/build/
